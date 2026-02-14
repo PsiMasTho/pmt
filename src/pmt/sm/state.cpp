@@ -23,9 +23,9 @@ void State::clear_symbol_transitions() {
  _symbol_transitions.clear();
 }
 
-auto State::get_symbol_transition(SymbolType symbol_) const -> StateNrType {
+auto State::get_symbol_transition(SymbolType symbol_) const -> std::optional<StateNrType> {
  StateNrType const* state_nr = _symbol_transitions.find(symbol_);
- return state_nr ? *state_nr : StateNrInvalid;
+ return state_nr ? std::make_optional(*state_nr) : std::nullopt;
 }
 
 auto State::get_symbol_transitions() const -> IntervalMap<SymbolType, StateNrType> const& {

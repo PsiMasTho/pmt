@@ -4,6 +4,8 @@
 #include "pmt/container/interval_set.hpp"
 #include "pmt/sm/primitives.hpp"
 
+#include <optional>
+
 namespace pmt::sm {
 
 class State {
@@ -26,7 +28,7 @@ public:
  void remove_symbol_transitions(pmt::container::Interval<SymbolType> symbol_interval_);
  void clear_symbol_transitions();
 
- auto get_symbol_transition(SymbolType symbol_) const -> StateNrType;
+ auto get_symbol_transition(SymbolType symbol_) const -> std::optional<StateNrType>;
  auto get_symbol_transitions() const -> pmt::container::IntervalMap<SymbolType, StateNrType> const&;
 
  auto get_symbols() const -> pmt::container::IntervalSet<SymbolType>;

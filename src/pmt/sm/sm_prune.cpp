@@ -1,4 +1,4 @@
-#include "pmt/sm/state_machine_pruner.hpp"
+#include "pmt/sm/sm_prune.hpp"
 
 #include "pmt/sm/state_machine.hpp"
 
@@ -13,15 +13,17 @@ class Locals {
 public:
  std::unordered_map<StateNrType, StateNrType> _old_to_new;
  std::vector<StateNrType> _pending;
+ StateMachine _state_machine;
+ std::optional<StateNrType>& _state_nr_from_new;
 };
 
-auto push_and_visit(StateMachinePruner::Args& args_, Locals& locals_, StateNrType state_nr_) {
+auto push_and_visit(Locals& locals_, StateNrType state_nr_) {
  if (auto const itr = locals_._old_to_new.find(state_nr_); itr != locals_._old_to_new.end()) {
   return;
  }
 
- StateNrType const state_nr_new = args_._state_nr_from_new.value_or(state_nr_);
- args_._state_nr_from_new = args_._state_nr_from_new.has_value() ? std::make_optional(state_nr_new + 1) : std::nullopt;
+ StateNrType const state_nr_new = locals_._state_nr_from_new.value_or(state_nr_);
+ locals_._state_nr_from_new = locals_._state_nr_from_new.has_value() ? std::make_optional(state_nr_new + 1) : std::nullopt;
 
  locals_._pending.push_back(state_nr_);
  locals_._old_to_new.emplace(state_nr_, state_nr_new);
@@ -34,28 +36,28 @@ auto take(Locals& locals_) -> StateNrType {
  return ret;
 }
 
-void follow_epsilon_transitions(StateMachinePruner::Args& args_, Locals& locals_, State& state_old_) {
+void follow_epsilon_transitions(Locals& locals_, State& state_old_) {
  IntervalSet<StateNrType> to_remove;
 
  state_old_.get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_old_) {
-  if (args_._state_machine.get_state(state_nr_next_old_) == nullptr) {
+  if (locals_._state_machine.get_state(state_nr_next_old_) == nullptr) {
    to_remove.insert(Interval(state_nr_next_old_));
   } else {
-   push_and_visit(args_, locals_, state_nr_next_old_);
+   push_and_visit(locals_, state_nr_next_old_);
   }
  });
 
  to_remove.for_each_key([&](StateNrType state_nr_to_remove_) { state_old_.remove_epsilon_transition(state_nr_to_remove_); });
 }
 
-void follow_symbol_transitions(StateMachinePruner::Args& args_, Locals& locals_, State& state_old_) {
+void follow_symbol_transitions(Locals& locals_, State& state_old_) {
  std::vector<Interval<SymbolType>> to_remove;
 
  state_old_.get_symbol_transitions().for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolType> const& interval_) {
-  if (args_._state_machine.get_state(state_nr_next_old_) == nullptr) {
+  if (locals_._state_machine.get_state(state_nr_next_old_) == nullptr) {
    to_remove.push_back(interval_);
   } else {
-   push_and_visit(args_, locals_, state_nr_next_old_);
+   push_and_visit(locals_, state_nr_next_old_);
   }
  });
 
@@ -76,31 +78,31 @@ void copy_symbol_transitions(Locals& locals_, StateMachine& state_machine_new_, 
 
 }  // namespace
 
-void StateMachinePruner::prune(Args args_) {
- Locals locals;
- push_and_visit(args_, locals, args_._state_nr_from);
+auto sm_prune(StateMachine const& state_machine_, StateNrType state_nr_from_, std::optional<StateNrType> state_nr_from_new_) -> StateMachine {
+ Locals locals{._state_machine = state_machine_, ._state_nr_from_new = state_nr_from_new_};
+ push_and_visit(locals, state_nr_from_);
 
  while (!locals._pending.empty()) {
   StateNrType const state_nr_old = take(locals);
-  State& state_old = *args_._state_machine.get_state(state_nr_old);
+  State& state_old = *locals._state_machine.get_state(state_nr_old);
 
-  follow_epsilon_transitions(args_, locals, state_old);
-  follow_symbol_transitions(args_, locals, state_old);
+  follow_epsilon_transitions(locals, state_old);
+  follow_symbol_transitions(locals, state_old);
  }
 
  // Remove states that were not visited
- for (StateNrType const state_nr : args_._state_machine.get_state_nrs()) {
+ for (StateNrType const state_nr : locals._state_machine.get_state_nrs()) {
   if (locals._old_to_new.find(state_nr) != locals._old_to_new.end()) {
    continue;
   }
-  args_._state_machine.remove_state(state_nr);
+  locals._state_machine.remove_state(state_nr);
  }
 
  // Renumber states if necessary
- if (args_._state_nr_from_new.has_value()) {
+ if (locals._state_nr_from_new.has_value()) {
   StateMachine state_machine_new;
   for (auto const& [state_nr_old, state_nr_new] : locals._old_to_new) {
-   State const* state_old = args_._state_machine.get_state(state_nr_old);
+   State const* state_old = locals._state_machine.get_state(state_nr_old);
    State& state_new = state_machine_new.get_or_create_state(state_nr_new);
 
    copy_epsilon_transitions(locals, state_machine_new, *state_old, state_new);
@@ -109,8 +111,9 @@ void StateMachinePruner::prune(Args args_) {
   }
 
   // Replace the old state machine with the new one
-  args_._state_machine = std::move(state_machine_new);
+  return state_machine_new;
  }
+ return locals._state_machine;
 }
 
 }  // namespace pmt::sm

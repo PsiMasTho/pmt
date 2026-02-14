@@ -115,7 +115,11 @@ auto sm_to_dot_str(pmt::sm::StateMachine const& state_machine_, FinalIdToStringF
   for (StateNrType const state_nr : state_machine_.get_state_nrs()) {
    pmt::sm::State const& state = *state_machine_.get_state(state_nr);
    std::unordered_map<StateNrType, IntervalSet<SymbolType>> symbol_intervals_per_state_nr_next;
-   state.get_symbols().for_each_key([&](SymbolType symbol_) { symbol_intervals_per_state_nr_next[state.get_symbol_transition(symbol_)].insert(Interval(symbol_)); });
+   state.get_symbols().for_each_key([&](SymbolType symbol_) {
+    if (std::optional<StateNrType> const state_nr_next = state.get_symbol_transition(symbol_); state_nr_next.has_value()) {
+     symbol_intervals_per_state_nr_next[*state_nr_next].insert(Interval(symbol_));
+    }
+   });
 
    for (auto const& [state_nr_next, symbol_intervals] : symbol_intervals_per_state_nr_next) {
     std::string label = build_symbol_label(symbol_intervals);
