@@ -24,4 +24,4 @@ public:
  static void prune(Args args_);
 };
 
-}  // namespace pmt::util::sm::ct
+}  // namespace pmt::sm

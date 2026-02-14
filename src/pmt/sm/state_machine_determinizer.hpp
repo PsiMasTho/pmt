@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pmt/sm/state_machine.hpp"
 #include "pmt/sm/primitives.hpp"
+#include "pmt/sm/state_machine.hpp"
 
 namespace pmt::sm {
 

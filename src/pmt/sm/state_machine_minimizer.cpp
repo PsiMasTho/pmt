@@ -164,7 +164,7 @@ auto get_equivalence_partitions(StateMachine const& state_machine_, std::span<St
  return initial_partitions_;
 }
 
-auto get_state_nr_to_equivalence_partitions_mapping(StateMachine const& state_machine_, StateNrBitsetMapping const& mapping_, std::unordered_set<Bitset,BitsetHasher> const& equivalence_partitions_) -> std::unordered_map<StateNrType, Bitset const*> {
+auto get_state_nr_to_equivalence_partitions_mapping(StateMachine const& state_machine_, StateNrBitsetMapping const& mapping_, std::unordered_set<Bitset, BitsetHasher> const& equivalence_partitions_) -> std::unordered_map<StateNrType, Bitset const*> {
  std::unordered_map<StateNrType, Bitset const*> ret;
 
  for (Bitset const& equivalence_partition : equivalence_partitions_) {
@@ -228,7 +228,7 @@ auto rebuild_minimized_state_machine(StateMachine const& state_machine_, StateNr
 auto StateMachineMinimizer::minimize(StateMachine const& input_state_machine_) -> StateMachine {
  std::span<StateNrType const> const state_nrs = input_state_machine_.get_state_nrs();
  StateNrBitsetMapping const mapping = get_mapping(state_nrs);
- std::unordered_set<Bitset,BitsetHasher> const p = get_equivalence_partitions(input_state_machine_, state_nrs, mapping, get_alphabet(input_state_machine_, state_nrs), get_initial_partitions(input_state_machine_, state_nrs, mapping));
+ std::unordered_set<Bitset, BitsetHasher> const p = get_equivalence_partitions(input_state_machine_, state_nrs, mapping, get_alphabet(input_state_machine_, state_nrs), get_initial_partitions(input_state_machine_, state_nrs, mapping));
  std::unordered_map<StateNrType, Bitset const*> const state_nr_to_equiv_partition = get_state_nr_to_equivalence_partitions_mapping(input_state_machine_, mapping, p);
  return rebuild_minimized_state_machine(input_state_machine_, mapping, state_nr_to_equiv_partition);
 }

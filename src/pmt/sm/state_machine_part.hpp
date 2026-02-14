@@ -43,4 +43,4 @@ public:
  void connect_outgoing_transitions_to(StateNrType state_nr_to_, StateMachine& state_machine_);
 };
 
-}  // namespace pmt::util::sm::ct
+}  // namespace pmt::sm

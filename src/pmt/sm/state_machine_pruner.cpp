@@ -51,13 +51,13 @@ void follow_epsilon_transitions(StateMachinePruner::Args& args_, Locals& locals_
 void follow_symbol_transitions(StateMachinePruner::Args& args_, Locals& locals_, State& state_old_) {
  std::vector<Interval<SymbolType>> to_remove;
 
-  state_old_.get_symbol_transitions().for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolType> const& interval_) {
-   if (args_._state_machine.get_state(state_nr_next_old_) == nullptr) {
-    to_remove.push_back(interval_);
-   } else {
-    push_and_visit(args_, locals_, state_nr_next_old_);
-   }
-  });
+ state_old_.get_symbol_transitions().for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolType> const& interval_) {
+  if (args_._state_machine.get_state(state_nr_next_old_) == nullptr) {
+   to_remove.push_back(interval_);
+  } else {
+   push_and_visit(args_, locals_, state_nr_next_old_);
+  }
+ });
 
  while (!to_remove.empty()) {
   Interval<SymbolType> interval = to_remove.back();

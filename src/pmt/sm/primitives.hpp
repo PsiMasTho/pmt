@@ -14,4 +14,4 @@ enum : StateNrType {
  StateNrInvalid = std::numeric_limits<StateNrType>::max(),
 };
 
-}  // namespace pmt::rt
+}  // namespace pmt::sm

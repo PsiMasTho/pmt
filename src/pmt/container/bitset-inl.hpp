@@ -28,4 +28,4 @@ void Bitset::for_each_bit(F_&& f_) const {
  }
 }
 
-}  // namespace pmt::base
+}  // namespace pmt::container

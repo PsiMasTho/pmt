@@ -11,4 +11,4 @@ public:
  static auto minimize(StateMachine const& state_machine_) -> StateMachine;
 };
 
-}  // namespace pmt::util::sm::ct
+}  // namespace pmt::sm
