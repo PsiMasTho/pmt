@@ -234,16 +234,7 @@ auto Bitset::none() const -> bool {
 }
 
 auto Bitset::all() const -> bool {
- if (_size == 0) {
-  return true;
- }
-
- size_t max = get_required_chunk_count(_size) - 1;
- bool const lhs = std::all_of(_data.get(), _data.get() + max, [](ChunkType chunk_) { return chunk_ == ALL_SET_MASKS[1]; });
- if (!lhs) {
-  return false;
- }
- return static_cast<size_t>(std::popcount(_data[max])) == get_bit_index(_size);
+ return popcnt() == size();
 }
 
 auto Bitset::popcnt() const -> size_t {
